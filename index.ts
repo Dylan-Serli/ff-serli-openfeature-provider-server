@@ -2,7 +2,6 @@ import {
   Provider,
   ResolutionDetails,
   EvaluationContext,
-  JsonValue,
   OpenFeatureEventEmitter,
   FlagValue,
   StandardResolutionReasons,
@@ -103,28 +102,28 @@ export class SerliProvider implements Provider {
   }
 }
 
-const provider = new SerliProvider("api_key_2");
-const context = {};
-console.log(await provider.resolveBooleanEvaluation("my-flag", false, context));
-console.log(
-  await provider.resolveStringEvaluation(
-    "new-1",
-    "default resolved value",
-    context,
-  ),
-);
-console.log(await provider.resolveNumberEvaluation("new-flag-2", 0, context));
+// const provider = new SerliProvider("api_key_2");
+// const context = {};
+// console.log(await provider.resolveBooleanEvaluation("my-flag", false, context));
+// console.log(
+//   await provider.resolveStringEvaluation(
+//     "new-1",
+//     "default resolved value",
+//     context,
+//   ),
+// );
+// console.log(await provider.resolveNumberEvaluation("new-flag-2", 0, context));
 
-console.log(
-  await provider.resolveObjectEvaluation("json-flag", { version: 4 }, context),
-);
+// console.log(
+//   await provider.resolveObjectEvaluation("json-flag", { version: 4 }, context),
+// );
 
-console.log(
-  "non existant flag (return default value of 0): ",
-  await provider.resolveNumberEvaluation("non-existant-flag", 0, context),
-);
+// console.log(
+//   "non existant flag (return default value of 0): ",
+//   await provider.resolveNumberEvaluation("non-existant-flag", 0, context),
+// );
 
-console.log(
-  "type mismatch flag: ",
-  await provider.resolveNumberEvaluation("my-flag", 0, context),
-);
+// console.log(
+//   "type mismatch flag: ",
+//   await provider.resolveNumberEvaluation("my-flag", 0, context),
+// );
