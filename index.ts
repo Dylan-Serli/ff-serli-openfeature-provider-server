@@ -70,6 +70,14 @@ export default class SerliProvider implements Provider {
     })
       .then(async (response) => {
         if (!response.ok) {
+          if (response.status === 404) {
+            return {
+              value: defaultValue,
+              reason: StandardResolutionReasons.ERROR,
+              errorCode: ErrorCode.FLAG_NOT_FOUND,
+              errorMessage: `flag ${flagKey} does not exist`,
+            } as ResolutionDetails<T>;
+          }
           throw new Error(`Failed to fetch flags: ${response.statusText}`);
         }
         const data = await response.json();

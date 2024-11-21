@@ -11,7 +11,8 @@
   "outputFormat": "esmodule",
   "scripts": {
     "start": "node --loader ts-node/esm index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "serli",
