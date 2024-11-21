@@ -1,14 +1,16 @@
 {
-  "name": "ff-serli-openfeature-provider",
+  "name": "ff-serli-openfeature-provider-server",
   "version": "1.0.0",
-  "description": "Serli feature flipping openfeature provider",
+  "description": "Serli's OpenFeature provider",
+  "repository": {
+    "url": "https://github.com/Dylan-Serli/ff-serli-openfeature-provider-server"
+  },
   "main": "index.ts",
   "type": "module",
   "module": "es2022",
   "outputFormat": "esmodule",
   "scripts": {
-    "start": "node --loader ts-node/esm index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node --loader ts-node/esm index.ts"
   },
   "keywords": [
     "serli",

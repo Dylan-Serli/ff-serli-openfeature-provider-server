@@ -9,7 +9,7 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["type-factory.ts", "serli_provider.ts"],
+  "include": ["type-factory.ts", "index.ts"],
   "ts-node": {
     "esm": true
   }

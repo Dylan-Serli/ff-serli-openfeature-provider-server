@@ -1,27 +1,103 @@
-import { OpenFeature, Client } from "@openfeature/server-sdk";
-import { SerliProvider } from "./serli_provider.ts";
+import {
+  Provider,
+  ResolutionDetails,
+  EvaluationContext,
+  OpenFeatureEventEmitter,
+  FlagValue,
+  StandardResolutionReasons,
+  ErrorCode,
+} from "@openfeature/server-sdk";
+import { FlagType, typeFactory } from "./type-factory.ts";
 
-OpenFeature.setProvider(new SerliProvider("api_key_2"));
-const client: Client = OpenFeature.getClient();
+export default class SerliProvider implements Provider {
+  readonly metadata = {
+    name: SerliProvider.name,
+  } as const;
 
-console.log(await client.getBooleanValue("my-flag", false));
-console.log(await client.getBooleanDetails("my-flag", false));
+  readonly runsOn = "server";
+  private readonly API_URL = "http://localhost:3328/api/v1/flags/";
+  private api_key = "";
 
-console.log(await client.getStringValue("new-1", "default resolved value"));
-console.log(await client.getStringDetails("new-1", "default resolved value"));
+  constructor(api_key: string) {
+    this.api_key = api_key;
+  }
+  // emitter for provider events
+  events = new OpenFeatureEventEmitter();
 
-console.log(await client.getNumberValue("new-flag-2", 0));
-console.log(await client.getNumberDetails("new-flag-2", 0));
+  resolveBooleanEvaluation(
+    flagKey: string,
+    defaultValue: boolean,
+    context: EvaluationContext,
+  ): Promise<ResolutionDetails<boolean>> {
+    return this.evaluate(flagKey, "boolean", defaultValue);
+  }
 
-// console.log(await client.getObjectValue("json-flag", { version: 4 }));
-// console.log(await client.getObjectDetails("json-flag", { version: 4 }));
+  resolveStringEvaluation(
+    flagKey: string,
+    defaultValue: string,
+    context: EvaluationContext,
+  ): Promise<ResolutionDetails<string>> {
+    return this.evaluate<string>(flagKey, "string", defaultValue);
+  }
 
-// console.log(
-//   "non existant flag (return default value of 0): ",
-//   await provider.resolveNumberEvaluation("non-existant-flag", 0, context),
-// );
+  resolveNumberEvaluation(
+    flagKey: string,
+    defaultValue: number,
+    context: EvaluationContext,
+  ): Promise<ResolutionDetails<number>> {
+    return this.evaluate<number>(flagKey, "number", defaultValue);
+  }
 
-// console.log(
-//   "type mismatch flag: ",
-//   await provider.resolveNumberEvaluation("my-flag", 0, context),
-// );
+  resolveObjectEvaluation<JsonValue extends FlagValue>(
+    flagKey: string,
+    defaultValue: JsonValue,
+    context: EvaluationContext,
+  ): Promise<ResolutionDetails<JsonValue>> {
+    return this.evaluate<JsonValue>(flagKey, "object", defaultValue);
+  }
+
+  private async evaluate<T extends FlagValue>(
+    flagKey: string,
+    type: FlagType,
+    defaultValue: T,
+  ) {
+    return fetch(this.API_URL + flagKey, {
+      method: "GET",
+      headers: {
+        Authorization: `${this.api_key}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch flags: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(`Error when fetching flags: ${response.statusText}`);
+        }
+        const value = typeFactory(data.value, type);
+        if (typeof value !== "undefined" && typeof value !== type) {
+          return {
+            value: defaultValue,
+            reason: StandardResolutionReasons.CACHED,
+            errorCode: ErrorCode.TYPE_MISMATCH,
+            errorMessage: `flag key ${flagKey} is not of type ${type}`,
+          } as ResolutionDetails<T>;
+        }
+        return {
+          value: (typeof value !== type ? defaultValue : value) as T,
+          reason: StandardResolutionReasons.CACHED,
+        } as ResolutionDetails<T>;
+      })
+      .catch((error) => {
+        return {
+          value: defaultValue,
+          reason: StandardResolutionReasons.ERROR,
+          errorCode: ErrorCode.PROVIDER_FATAL,
+          errorMessage: error.message,
+        } as ResolutionDetails<T>;
+      });
+  }
+}
