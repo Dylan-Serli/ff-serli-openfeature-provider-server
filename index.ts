@@ -85,6 +85,7 @@ export default class SerliProvider implements Provider {
         if (data.error) {
           throw new Error(`Error when fetching flags: ${response.statusText}`);
         }
+
         const value = typeFactory(data.value, type);
         if (typeof value !== "undefined" && typeof value !== type) {
           return {
