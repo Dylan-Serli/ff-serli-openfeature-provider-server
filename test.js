@@ -1,8 +1,8 @@
-import { OpenFeature, Client } from "@openfeature/server-sdk";
-import SerliProvider from "./index.ts";
+import { OpenFeature } from "@openfeature/server-sdk";
+import SerliProvider from "./dist/index.js";
 
-OpenFeature.setProvider(new SerliProvider("api_key_2"));
-const client: Client = OpenFeature.getClient();
+OpenFeature.setProvider(new SerliProvider("your_api_key"));
+const client = OpenFeature.getClient();
 
 console.log(await client.getBooleanValue("my-flag", false));
 console.log(await client.getBooleanDetails("my-flag", false));

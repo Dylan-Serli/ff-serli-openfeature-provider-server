@@ -5,12 +5,13 @@
   "repository": {
     "url": "https://github.com/Dylan-Serli/ff-serli-openfeature-provider-server"
   },
-  "main": "index.ts",
+  "main": "dist/index.js",
   "type": "module",
   "module": "es2022",
   "outputFormat": "esmodule",
   "scripts": {
-    "start": "node --loader ts-node/esm index.ts"
+    "start": "node --loader ts-node/esm index.ts",
+    "build": "tsc"
   },
   "keywords": [
     "serli",
