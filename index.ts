@@ -15,7 +15,7 @@ export default class SerliProvider implements Provider {
   } as const;
 
   readonly runsOn = "server";
-  private readonly API_URL = "http://localhost:3328/api/v1/flags/";
+  private readonly API_URL = "http://localhost:3333/api/flags/";
   private api_key = "";
 
   constructor(api_key: string) {
