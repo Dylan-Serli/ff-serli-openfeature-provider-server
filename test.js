@@ -1,14 +1,18 @@
 import { OpenFeature } from "@openfeature/server-sdk";
 import SerliProvider from "./dist/index.js";
 
-OpenFeature.setProvider(new SerliProvider("your_api_key"));
+OpenFeature.setProvider(
+  new SerliProvider(
+    "94470a2be2c64036b3dcd9083c35a7007879547b0ba040e6948bb27228a7541c",
+  ),
+);
 const client = OpenFeature.getClient();
 
-console.log(await client.getBooleanValue("my-flags", false));
-console.log(await client.getBooleanDetails("my-flag", false));
+console.log(await client.getBooleanValue("bu", false));
+console.log(await client.getBooleanDetails("bu", false));
 
-console.log(await client.getStringValue("new-1", "default resolved value"));
-console.log(await client.getStringDetails("new-1", "default resolved value"));
+console.log(await client.getStringValue("Simpson", "default resolved value"));
+console.log(await client.getStringDetails("Simpson", "default resolved value"));
 
 console.log(await client.getNumberValue("new-flag-2", 0));
 console.log(await client.getNumberDetails("new-flag-2", 0));

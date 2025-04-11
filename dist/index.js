@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { OpenFeatureEventEmitter, StandardResolutionReasons, ErrorCode, } from "@openfeature/server-sdk";
 import { typeFactory } from "./type-factory.js";
 export default class SerliProvider {
@@ -5,10 +7,11 @@ export default class SerliProvider {
         name: SerliProvider.name,
     };
     runsOn = "server";
-    API_URL = "http://localhost:3328/api/v1/flags/";
+    API_URL = process.env.API_URL || "http://localhost:3333/api/flags/";
     api_key = "";
     constructor(api_key) {
         this.api_key = api_key;
+        console.log("API_URL:", this.API_URL);
     }
     // emitter for provider events
     events = new OpenFeatureEventEmitter();

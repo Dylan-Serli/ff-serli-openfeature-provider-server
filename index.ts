@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import {
   Provider,
   ResolutionDetails,
@@ -15,7 +17,8 @@ export default class SerliProvider implements Provider {
   } as const;
 
   readonly runsOn = "server";
-  private readonly API_URL = "http://localhost:3333/api/flags/";
+  private readonly API_URL =
+    process.env.API_URL || "http://localhost:3333/api/flags/";
   private api_key = "";
 
   constructor(api_key: string) {
