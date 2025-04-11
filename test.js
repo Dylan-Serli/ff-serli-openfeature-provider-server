@@ -14,8 +14,8 @@ console.log(await client.getBooleanDetails("bu", false));
 console.log(await client.getStringValue("Simpson", "default resolved value"));
 console.log(await client.getStringDetails("Simpson", "default resolved value"));
 
-console.log(await client.getNumberValue("new-flag-2", 0));
-console.log(await client.getNumberDetails("new-flag-2", 0));
+console.log(await client.getNumberValue("number", 0));
+console.log(await client.getNumberDetails("number", 0));
 
 // console.log(await client.getObjectValue("json-flag", { version: 4 }));
 // console.log(await client.getObjectDetails("json-flag", { version: 4 }));

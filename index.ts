@@ -64,53 +64,70 @@ export default class SerliProvider implements Provider {
     flagKey: string,
     type: FlagType,
     defaultValue: T,
-  ) {
-    return fetch(this.API_URL + flagKey, {
-      method: "GET",
-      headers: {
-        Authorization: `${this.api_key}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          if (response.status === 404) {
-            return {
-              value: defaultValue,
-              reason: StandardResolutionReasons.ERROR,
-              errorCode: ErrorCode.FLAG_NOT_FOUND,
-              errorMessage: `flag ${flagKey} does not exist`,
-            } as ResolutionDetails<T>;
-          }
-          throw new Error(`Failed to fetch flags: ${response.statusText}`);
-        }
-        const data = await response.json();
-
-        if (data.error) {
-          throw new Error(`Error when fetching flags: ${response.statusText}`);
-        }
-
-        const value = typeFactory(data.value, type);
-        if (typeof value !== "undefined" && typeof value !== type) {
-          return {
-            value: defaultValue,
-            reason: StandardResolutionReasons.CACHED,
-            errorCode: ErrorCode.TYPE_MISMATCH,
-            errorMessage: `flag key ${flagKey} is not of type ${type}`,
-          } as ResolutionDetails<T>;
-        }
-        return {
-          value: (typeof value !== type ? defaultValue : value) as T,
-          reason: StandardResolutionReasons.CACHED,
-        } as ResolutionDetails<T>;
-      })
-      .catch((error) => {
-        return {
-          value: defaultValue,
-          reason: StandardResolutionReasons.ERROR,
-          errorCode: ErrorCode.PROVIDER_FATAL,
-          errorMessage: error.message,
-        } as ResolutionDetails<T>;
+  ): Promise<ResolutionDetails<T>> {
+    try {
+      const response = await fetch(`${this.API_URL}${flagKey}`, {
+        method: "GET",
+        headers: {
+          Authorization: this.api_key,
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return this.createErrorResolution(
+            defaultValue,
+            ErrorCode.FLAG_NOT_FOUND,
+            `Flag ${flagKey} not found`,
+            StandardResolutionReasons.ERROR,
+          );
+        }
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const data = (await response.json()) as FlagResponse;
+      if (data.error) throw new Error(data.error);
+
+      if (!this.isTypeCorrect(data.value, type)) {
+        return this.createErrorResolution(
+          defaultValue,
+          ErrorCode.TYPE_MISMATCH,
+          `Flag ${flagKey} is not of type ${type}`,
+          StandardResolutionReasons.CACHED,
+        );
+      }
+
+      return {
+        value: data.value as T,
+        reason: StandardResolutionReasons.CACHED,
+      };
+    } catch (error) {
+      return this.createErrorResolution(
+        defaultValue,
+        ErrorCode.PROVIDER_FATAL,
+        error instanceof Error ? error.message : "Unknown error",
+        StandardResolutionReasons.ERROR,
+      );
+    }
   }
+
+  private isTypeCorrect(value: unknown, type: FlagType): boolean {
+    if (type === "object") return value !== null && typeof value === "object";
+    return typeof value === type;
+  }
+
+  private createErrorResolution<T>(
+    value: T,
+    errorCode: ErrorCode,
+    message: string,
+    reason: any,
+  ): ResolutionDetails<T> {
+    return { value, reason, errorCode, errorMessage: message };
+  }
+}
+
+interface FlagResponse {
+  value: unknown;
+  error?: string;
 }

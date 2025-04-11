@@ -1,7 +1,7 @@
+//see https://openfeature.dev/docs/reference/concepts/provider
 import dotenv from "dotenv";
 dotenv.config();
 import { OpenFeatureEventEmitter, StandardResolutionReasons, ErrorCode, } from "@openfeature/server-sdk";
-import { typeFactory } from "./type-factory.js";
 export default class SerliProvider {
     metadata = {
         name: SerliProvider.name,
@@ -11,7 +11,6 @@ export default class SerliProvider {
     api_key = "";
     constructor(api_key) {
         this.api_key = api_key;
-        console.log("API_URL:", this.API_URL);
     }
     // emitter for provider events
     events = new OpenFeatureEventEmitter();
@@ -28,50 +27,41 @@ export default class SerliProvider {
         return this.evaluate(flagKey, "object", defaultValue);
     }
     async evaluate(flagKey, type, defaultValue) {
-        return fetch(this.API_URL + flagKey, {
-            method: "GET",
-            headers: {
-                Authorization: `${this.api_key}`,
-                "Content-Type": "application/json",
-            },
-        })
-            .then(async (response) => {
+        try {
+            const response = await fetch(`${this.API_URL}${flagKey}`, {
+                method: "GET",
+                headers: {
+                    Authorization: this.api_key,
+                    "Content-Type": "application/json",
+                },
+            });
             if (!response.ok) {
                 if (response.status === 404) {
-                    return {
-                        value: defaultValue,
-                        reason: StandardResolutionReasons.ERROR,
-                        errorCode: ErrorCode.FLAG_NOT_FOUND,
-                        errorMessage: `flag ${flagKey} does not exist`,
-                    };
+                    return this.createErrorResolution(defaultValue, ErrorCode.FLAG_NOT_FOUND, `Flag ${flagKey} not found`, StandardResolutionReasons.ERROR);
                 }
-                throw new Error(`Failed to fetch flags: ${response.statusText}`);
+                throw new Error(`HTTP error: ${response.status}`);
             }
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(`Error when fetching flags: ${response.statusText}`);
-            }
-            const value = typeFactory(data.value, type);
-            if (typeof value !== "undefined" && typeof value !== type) {
-                return {
-                    value: defaultValue,
-                    reason: StandardResolutionReasons.CACHED,
-                    errorCode: ErrorCode.TYPE_MISMATCH,
-                    errorMessage: `flag key ${flagKey} is not of type ${type}`,
-                };
+            const data = (await response.json());
+            if (data.error)
+                throw new Error(data.error);
+            if (!this.isTypeCorrect(data.value, type)) {
+                return this.createErrorResolution(defaultValue, ErrorCode.TYPE_MISMATCH, `Flag ${flagKey} is not of type ${type}`, StandardResolutionReasons.CACHED);
             }
             return {
-                value: (typeof value !== type ? defaultValue : value),
+                value: data.value,
                 reason: StandardResolutionReasons.CACHED,
             };
-        })
-            .catch((error) => {
-            return {
-                value: defaultValue,
-                reason: StandardResolutionReasons.ERROR,
-                errorCode: ErrorCode.PROVIDER_FATAL,
-                errorMessage: error.message,
-            };
-        });
+        }
+        catch (error) {
+            return this.createErrorResolution(defaultValue, ErrorCode.PROVIDER_FATAL, error instanceof Error ? error.message : "Unknown error", StandardResolutionReasons.ERROR);
+        }
+    }
+    isTypeCorrect(value, type) {
+        if (type === "object")
+            return value !== null && typeof value === "object";
+        return typeof value === type;
+    }
+    createErrorResolution(value, errorCode, message, reason) {
+        return { value, reason, errorCode, errorMessage: message };
     }
 }
