@@ -10,7 +10,7 @@ import {
   StandardResolutionReasons,
   ErrorCode,
 } from "@openfeature/server-sdk";
-import { FlagType, typeFactory } from "./type-factory.js";
+import { FlagType } from "./type-factory.js";
 
 export default class SerliProvider implements Provider {
   readonly metadata = {
