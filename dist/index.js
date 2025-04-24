@@ -7,10 +7,12 @@ export default class SerliProvider {
         name: SerliProvider.name,
     };
     runsOn = "server";
-    API_URL = process.env.API_URL || "http://localhost:3333/api/flags/";
+    API_URL = process.env.API_URL || "http://localhost:3333/api/flags";
     api_key = "";
-    constructor(api_key) {
+    project_id = "";
+    constructor(api_key, project_id) {
         this.api_key = api_key;
+        this.project_id = project_id;
     }
     // emitter for provider events
     events = new OpenFeatureEventEmitter();
@@ -28,7 +30,7 @@ export default class SerliProvider {
     }
     async evaluate(flagKey, type, defaultValue) {
         try {
-            const response = await fetch(`${this.API_URL}${flagKey}`, {
+            const response = await fetch(`${this.API_URL}/${this.project_id}/${flagKey}`, {
                 method: "GET",
                 headers: {
                     Authorization: this.api_key,

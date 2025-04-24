@@ -19,11 +19,13 @@ export default class SerliProvider implements Provider {
 
   readonly runsOn = "server";
   private readonly API_URL =
-    process.env.API_URL || "http://localhost:3333/api/flags/";
+    process.env.API_URL || "http://localhost:3333/api/flags";
   private api_key = "";
+  private project_id = "";
 
-  constructor(api_key: string) {
+  constructor(api_key: string, project_id: string) {
     this.api_key = api_key;
+    this.project_id = project_id;
   }
   // emitter for provider events
   events = new OpenFeatureEventEmitter();
@@ -66,13 +68,16 @@ export default class SerliProvider implements Provider {
     defaultValue: T,
   ): Promise<ResolutionDetails<T>> {
     try {
-      const response = await fetch(`${this.API_URL}${flagKey}`, {
-        method: "GET",
-        headers: {
-          Authorization: this.api_key,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${this.API_URL}/${this.project_id}/${flagKey}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: this.api_key,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
